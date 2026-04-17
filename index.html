@@ -399,11 +399,12 @@ function launchApp() {
   document.getElementById('setupWrap').style.display = 'none';
   document.getElementById('appRoot').style.display = 'flex';
   document.getElementById('sidebarShop').textContent = d.setup.shop || d.setup.charity;
-  document.getElementById('setCharity').value = d.setup.charity;
-  document.getElementById('setShop').value = d.setup.shop;
+  document.getElementById('setCharity').value = d.setup.charity || '';
+  document.getElementById('setShop').value = d.setup.shop || '';
   document.getElementById('setApiKey').value = d.setup.apiKey || '';
   document.getElementById('keyWarning').style.display = d.setup.apiKey ? 'none' : 'block';
   updateNavCount();
+  if (!d.setup.apiKey) showPage('settings', null, 'mobnav-settings');
 }
 
 function showPage(name, el, mobId) {
