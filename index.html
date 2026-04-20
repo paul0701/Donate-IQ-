@@ -633,31 +633,9 @@ zone.addEventListener('drop', e => {
 });
  
 // ── AI Scanning ──
-async function scanItems() {
-  if (!currentBase64) return;
-  const btn = document.getElementById('scanBtn');
-  btn.disabled = true;
-  document.getElementById('scanningIndicator').classList.add('show');
-  document.getElementById('resultsWrap').classList.remove('show');
-  document.getElementById('noItemsMsg').classList.remove('show');
+const WORKER_URL = 'https://donateiq.paul07011985.workers.dev';
  
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1500,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: currentType, data: currentBase64 }
-            },
-            {
-              type: 'text',
-              text: `You are helping a UK charity shop log and price donated items. You have expert knowledge of UK resale markets including eBay and Vinted sold listings.
+const SCAN_PROMPT = `You are helping a UK charity shop log and price donated items. You have expert knowledge of UK resale markets including eBay and Vinted sold listings.
  
 Examine this image and list every distinct item visible that could be sold in a charity shop.
  
@@ -667,7 +645,7 @@ Each object must have:
 - "name": specific descriptive name (e.g. "Blue ceramic mug", "Women's red wool coat size 12", "Pentax K1000 35mm Film Camera")
 - "category": exactly one of: Clothing, Books, Homeware, Electronics, Toys, Sports, Accessories, Music/Media, Art/Decor, Other
 - "condition": exactly one of: Excellent, Good, Fair, Poor
-- "marketValue": estimated current eBay/Vinted sold price in GBP (number). Be specific — research your knowledge of what this actually sells for. E.g. a Pentax K1000 sells for £80-120 on eBay.
+- "marketValue": estimated current eBay/Vinted sold price in GBP (number). Be specific — research your knowledge of what this actually sells for.
 - "price": recommended charity shop price in GBP (number). Should be roughly 20-30% of market value, minimum 50p. Never undersell valuable items.
 - "valueNote": one sentence explaining the market value (e.g. "Sells for £80-120 on eBay due to film photography revival")
  
@@ -679,17 +657,36 @@ Pricing guidance:
 - Electronics (working): market varies hugely, check carefully
 - Collectables/vintage: always check carefully, market value can be surprisingly high
  
-If items not clearly visible or image unsuitable, return [].`
-            }
-          ]
-        }]
+If items not clearly visible or image unsuitable, return [].`;
+ 
+async function scanItems() {
+  if (!currentBase64) return;
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+  document.getElementById('scanningIndicator').classList.add('show');
+  document.getElementById('resultsWrap').classList.remove('show');
+  document.getElementById('noItemsMsg').classList.remove('show');
+ 
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageData: currentBase64,
+        mimeType: currentType,
+        prompt: SCAN_PROMPT
       })
     });
  
     const data = await response.json();
-    const raw = data.content?.[0]?.text || '[]';
+    let raw = data.text || '[]';
     let items = [];
-    try { items = JSON.parse(raw.replace(/```json|```/g, '').trim()); } catch { items = []; }
+    try {
+      raw = raw.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const match = raw.match(/\[[\s\S]*\]/);
+      if (match) raw = match[0];
+      items = JSON.parse(raw);
+    } catch(e) { items = []; }
  
     document.getElementById('scanningIndicator').classList.remove('show');
     btn.disabled = false;
