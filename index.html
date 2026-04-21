@@ -347,6 +347,40 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
   z-index: 999; opacity: 0.85;
   box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
+.manual-entry {
+  margin-top: 1.25rem;
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  text-align: center;
+}
+.manual-entry-title {
+  font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem;
+}
+.manual-entry-sub {
+  font-size: 0.85rem; color: var(--muted); margin-bottom: 1rem;
+}
+.manual-entry-row {
+  display: flex; gap: 0.75rem; align-items: center;
+}
+.manual-entry-input {
+  flex: 1; padding: 0.75rem 1rem;
+  border: 2px solid var(--border); border-radius: var(--radius);
+  font-family: 'Nunito', sans-serif; font-size: 1rem;
+  background: var(--bg); color: var(--text); outline: none;
+  min-height: 48px;
+}
+.manual-entry-input:focus { border-color: var(--teal-mid); }
+.manual-entry-btn {
+  padding: 0.75rem 1.25rem; background: var(--teal); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-family: 'Nunito', sans-serif; font-size: 0.95rem; font-weight: 700;
+  cursor: pointer; white-space: nowrap; min-height: 48px;
+  transition: background 0.2s;
+}
+.manual-entry-btn:hover { background: var(--teal-mid); }
+.manual-entry-btn:disabled { background: #aaa; cursor: not-allowed; }
 .recent-sale {
   background: var(--green-light); color: var(--green);
   border: 1px solid #b8dfa0; border-radius: 8px;
@@ -612,6 +646,17 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
         <div class="no-items-icon">🤔</div>
         <strong>No items detected</strong>
         <p style="margin-top:0.5rem;">Try a clearer photo with items laid flat and well lit.</p>
+      </div>
+ 
+      <div class="manual-entry" id="manualEntry">
+        <div class="manual-entry-title">📝 Can't get a clear photo?</div>
+        <div class="manual-entry-sub">Type the item name and we'll look up the market value for you</div>
+        <div class="manual-entry-row">
+          <input type="text" class="manual-entry-input" id="manualInput" 
+            placeholder="e.g. Lego Arkham Asylum, Nike Air Max 90..." 
+            onkeydown="if(event.key==='Enter') lookupManual()">
+          <button class="manual-entry-btn" id="manualBtn" onclick="lookupManual()">🔍 Look up</button>
+        </div>
       </div>
  
       <div class="results-wrap" id="resultsWrap">
@@ -1362,11 +1407,85 @@ function exportCSV() {
   a.click();
 }
  
+async function lookupManual() {
+  const input = document.getElementById('manualInput');
+  const btn = document.getElementById('manualBtn');
+  const query = input.value.trim();
+  if (!query) { input.focus(); return; }
+ 
+  btn.disabled = true;
+  btn.textContent = '⏳ Looking up...';
+  document.getElementById('scanningIndicator').classList.add('show');
+  document.getElementById('resultsWrap').classList.remove('show');
+  document.getElementById('noItemsMsg').classList.remove('show');
+  startTeletext();
+ 
+  const prompt = `You are helping a UK charity shop price a donated item. The volunteer cannot get a clear photo but has typed the item name.
+ 
+Item: "${query}"
+ 
+Use your web search to look up current eBay UK sold listings for this item.
+ 
+Return ONLY a raw JSON array with ONE item — no preamble, no markdown, no backticks.
+ 
+The object must have:
+- "name": the full proper name of the item
+- "category": exactly one of: Clothing, Books, Homeware, Electronics, Toys, Sports, Accessories, Music/Media, Art/Decor, Other
+- "condition": "Good" (assume good condition unless item name suggests otherwise)
+- "marketValue": current eBay UK sold price in GBP (number)
+- "price": recommended charity shop price (roughly 25% of market value, minimum 50p)
+- "valueNote": one sentence explaining the market value
+- "recentSale": most recent comparable eBay UK sold listing e.g. "Sold 2 days ago — £42.00"
+- "authenticityWarning": null or warning if counterfeits are common`;
+ 
+  try {
+    const response = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, imageData: null, mimeType: null, textOnly: true })
+    });
+ 
+    const data = await response.json();
+    let raw = data.text || '[]';
+    let items = [];
+    try {
+      raw = raw.replace(/\`\`\`json/gi, '').replace(/\`\`\`/g, '').trim();
+      const match = raw.match(/\[[\s\S]*\]/);
+      if (match) raw = match[0];
+      items = JSON.parse(raw);
+    } catch { items = []; }
+ 
+    stopTeletext();
+    document.getElementById('scanningIndicator').classList.remove('show');
+    btn.disabled = false;
+    btn.textContent = '🔍 Look up';
+ 
+    if (!items.length) {
+      document.getElementById('noItemsMsg').classList.add('show');
+      return;
+    }
+ 
+    pendingItems = items.map((it, i) => ({ ...it, _id: Date.now() + i }));
+    renderPending();
+    document.getElementById('resultsWrap').classList.add('show');
+    document.getElementById('resultCount').textContent = `${pendingItems.length} item found`;
+    input.value = '';
+ 
+  } catch (err) {
+    stopTeletext();
+    document.getElementById('scanningIndicator').classList.remove('show');
+    btn.disabled = false;
+    btn.textContent = '🔍 Look up';
+    alert('Something went wrong. Please try again.');
+  }
+}
+ 
 function resetScan() {
   document.getElementById('resultsWrap').classList.remove('show');
   document.getElementById('previewWrap').style.display = 'none';
   document.getElementById('fileInput').value = '';
   document.getElementById('noItemsMsg').classList.remove('show');
+  document.getElementById('manualInput').value = '';
   currentBase64 = null;
   pendingItems = [];
   window.scrollTo(0, 0);
