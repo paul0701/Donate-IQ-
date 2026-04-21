@@ -1442,7 +1442,7 @@ The object must have:
     const response = await fetch(WORKER_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, imageData: null, mimeType: null, textOnly: true })
+      body: JSON.stringify({ prompt, textOnly: true })
     });
  
     const data = await response.json();
