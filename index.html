@@ -1,3 +1,6 @@
+Donationiq v2 · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -108,8 +111,20 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
   font-size: 0.75rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 10px;
 }
 .nav-icon { font-size: 1.2rem; width: 1.5rem; text-align: center; }
+.sidebar-footer { margin-top: auto; padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); }
+.sidebar-footer-brand { font-size: 0.75rem; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
+.sidebar-footer-tag { font-size: 0.7rem; color: var(--muted); margin-top: 0.1rem; }
+.sold-btn { background: var(--green-light); color: var(--green); border: 1px solid #b8dfa0; border-radius: 8px; font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 700; padding: 0.3rem 0.75rem; cursor: pointer; min-height: 36px; white-space: nowrap; }
+.sold-btn:hover { background: #d0edc0; }
+.scan-tips { background: var(--teal-light); border: 1px solid #b0dcc8; border-radius: var(--radius); padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+.scan-tips-title { font-weight: 700; font-size: 0.85rem; color: var(--teal); margin-bottom: 0.5rem; }
+.scan-tips ul { list-style: none; display: flex; flex-direction: column; gap: 0.25rem; }
+.scan-tips ul li { font-size: 0.85rem; color: var(--teal); }
+.scan-again-btn { margin-top: 0.75rem; width: 100%; padding: 0.8rem; background: var(--bg); color: var(--teal); border: 2px solid var(--teal-light); border-radius: var(--radius); font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+.scan-again-btn:hover { background: var(--teal-light); }
  
 .main { margin-left: var(--sidebar-w); padding: 2rem; min-height: 100vh; }
+.main-inner { max-width: 860px; }
  
 .page { display: none; }
 .page.active { display: block; }
@@ -266,6 +281,12 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
 }
 .add-all-btn:hover { background: var(--teal-mid); }
  
+.auth-warning {
+  background: var(--amber-light); color: var(--amber);
+  border: 1px solid #f0d090; border-radius: 8px;
+  padding: 0.5rem 0.75rem; font-size: 0.82rem; font-weight: 600;
+  margin-top: 0.5rem; display: flex; align-items: flex-start; gap: 0.4rem;
+}
 .no-items { text-align: center; padding: 2.5rem; color: var(--muted); background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-top: 1.5rem; display: none; }
 .no-items.show { display: block; }
 .no-items-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
@@ -365,25 +386,39 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
 }
 .danger-btn:hover { background: #f7c1c1; }
  
+/* ── Hamburger button ── */
+.hamburger {
+  display: none; position: fixed; top: 1rem; right: 1rem;
+  z-index: 100; background: var(--teal); color: #fff;
+  border: none; border-radius: 12px; width: 48px; height: 48px;
+  font-size: 1.4rem; cursor: pointer; align-items: center;
+  justify-content: center; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
+.sidebar-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4); z-index: 29;
+}
+.sidebar-overlay.show { display: block; }
+ 
 /* ── Responsive ── */
-@media (max-width: 680px) {
+@media (max-width: 900px) {
   :root { --sidebar-w: 0px; --font-base: 16px; }
-  .sidebar { display: none; }
-  .main { margin-left: 0; padding: 1.25rem 1rem 5rem; }
-  .mobile-nav { display: flex; }
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    width: 280px; z-index: 30;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .hamburger { display: flex; }
+  .main { margin-left: 0; padding: 1.25rem 1rem 2rem; }
+  .main-inner { padding-top: 0.5rem; }
   .impact-hero-value { font-size: 2.2rem; }
+  .impact-grid { grid-template-columns: repeat(2, 1fr); }
 }
-.mobile-nav {
-  display: none; position: fixed; bottom: 0; left: 0; right: 0;
-  background: var(--surface); border-top: 2px solid var(--border); z-index: 20;
-}
-.mob-item {
-  flex: 1; display: flex; flex-direction: column; align-items: center;
-  padding: 0.7rem 0; font-size: 0.72rem; font-weight: 600;
-  color: var(--muted); cursor: pointer; gap: 3px; min-height: 56px;
-}
-.mob-item.active { color: var(--teal); }
-.mob-icon { font-size: 1.4rem; }
+.mobile-nav { display: none; }
+.mob-item { display: none; }
+.mob-icon { display: none; }
 </style>
 </head>
 <body>
@@ -402,6 +437,8 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
 </div>
  
 <!-- App -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">☰</button>
 <div class="app" id="appRoot">
   <nav class="sidebar">
     <div class="sidebar-brand">
@@ -410,35 +447,34 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
     </div>
     <div class="nav-section">
       <div class="nav-label">Workflow</div>
-      <div class="nav-item active" onclick="showPage('impact',this,'mobnav-impact')">
+      <div class="nav-item active" onclick="showPage('impact',this);closeSidebar()">
         <span class="nav-icon">💚</span> Impact
       </div>
-      <div class="nav-item" onclick="showPage('scan',this,'mobnav-scan')">
+      <div class="nav-item" onclick="showPage('scan',this);closeSidebar()">
         <span class="nav-icon">📷</span> Scan Donation
       </div>
-      <div class="nav-item" onclick="showPage('stock',this,'mobnav-stock')">
+      <div class="nav-item" onclick="showPage('stock',this);closeSidebar()">
         <span class="nav-icon">📦</span> Stock List
         <span class="nav-badge" id="navCount">0</span>
       </div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Admin</div>
-      <div class="nav-item" onclick="showPage('settings',this,'mobnav-settings')">
+      <div class="nav-item" onclick="showPage('settings',this);closeSidebar()">
         <span class="nav-icon">⚙️</span> Settings
       </div>
     </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-brand">AGNOSTIC SOLUTIONS</div>
+      <div class="sidebar-footer-tag">ETL · Your data made simple</div>
+    </div>
   </nav>
  
-  <!-- Mobile nav -->
-  <div class="mobile-nav">
-    <div class="mob-item active" id="mobnav-impact" onclick="showPage('impact',null,'mobnav-impact')"><div class="mob-icon">💚</div>Impact</div>
-    <div class="mob-item" id="mobnav-scan" onclick="showPage('scan',null,'mobnav-scan')"><div class="mob-icon">📷</div>Scan</div>
-    <div class="mob-item" id="mobnav-stock" onclick="showPage('stock',null,'mobnav-stock')"><div class="mob-icon">📦</div>Stock</div>
-    <div class="mob-item" id="mobnav-settings" onclick="showPage('settings',null,'mobnav-settings')"><div class="mob-icon">⚙️</div>Settings</div>
-  </div>
+ 
  
   <main class="main">
  
+    <div class="main-inner">
     <!-- IMPACT PAGE -->
     <div class="page active" id="page-impact">
       <div class="page-title">Your Impact</div>
@@ -451,6 +487,15 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
       <div class="page-title">Scan a Donation</div>
       <div class="page-sub">Take a photo of donated items — AI will identify them and check market prices so you never undersell.</div>
  
+      <div class="scan-tips">
+        <div class="scan-tips-title">📸 Tips for best results</div>
+        <ul>
+          <li>✓ Lay items flat on a clear surface</li>
+          <li>✓ Good lighting makes a big difference</li>
+          <li>✓ Include brand labels in the shot where possible</li>
+          <li>✓ One bag of donations at a time works best</li>
+        </ul>
+      </div>
       <div class="upload-zone" id="uploadZone">
         <input type="file" accept="image/*" capture="environment" id="fileInput" onchange="handleFile(event)">
         <div class="upload-icon">📸</div>
@@ -482,6 +527,7 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
         </div>
         <div class="results-cards" id="resultCards"></div>
         <button class="add-all-btn" onclick="addAllToStock()">✓ Add all items to stock</button>
+        <button class="scan-again-btn" onclick="resetScan()">📷 Scan another donation</button>
       </div>
     </div>
  
@@ -524,6 +570,7 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
       </div>
     </div>
  
+    </div>
   </main>
 </div>
  
@@ -538,6 +585,16 @@ function loadData() {
   catch { return { setup: null, stock: [] }; }
 }
 function saveData(d) { localStorage.setItem(STORE, JSON.stringify(d)); }
+ 
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+ 
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
  
 function saveSetup() {
   const charity = document.getElementById('sCharity').value.trim();
@@ -561,13 +618,11 @@ function launchApp() {
   renderImpact();
 }
  
-function showPage(name, el, mobId) {
+function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.mob-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
-  if (mobId) document.getElementById(mobId).classList.add('active');
   if (name === 'stock') renderStock();
   if (name === 'impact') renderImpact();
   if (name === 'settings') {
@@ -637,7 +692,11 @@ const WORKER_URL = 'https://donateiq.paul07011985.workers.dev';
  
 const SCAN_PROMPT = `You are helping a UK charity shop log and price donated items. You have expert knowledge of UK resale markets including eBay and Vinted sold listings.
  
-Examine this image and list every distinct item visible that could be sold in a charity shop.
+Examine this image and list ONLY loose, portable donated items that could be sold in a charity shop.
+ 
+IGNORE completely: furniture, tables, chairs, shelves, floors, walls, carpets, curtains, surfaces items are resting on, and anything that is clearly part of the room itself.
+ 
+ONLY identify: clothing, books, toys, electronics, accessories, homeware items, ornaments, media — things someone has physically brought in to donate.
  
 Return ONLY a raw JSON array — no preamble, no markdown, no backticks.
  
@@ -648,6 +707,16 @@ Each object must have:
 - "marketValue": estimated current eBay/Vinted sold price in GBP (number). Be specific — research your knowledge of what this actually sells for.
 - "price": recommended charity shop price in GBP (number). Should be roughly 20-30% of market value, minimum 50p. Never undersell valuable items.
 - "valueNote": one sentence explaining the market value (e.g. "Sells for £80-120 on eBay due to film photography revival")
+- "authenticityWarning": null if no concern, or a short warning string if counterfeits are common for this item type (e.g. "Check LEGO stud markings — knock-off versions are very common and worth much less", "Verify authenticity — counterfeit versions of this perfume are widespread", "Check labels carefully — fake designer items are frequently donated")
+ 
+Items that ALWAYS need an authenticityWarning:
+- LEGO (knock-offs like Lepin are extremely common)
+- Designer perfume and aftershave (Chanel, Prada, Dior, etc)
+- Designer clothing (Ralph Lauren, Tommy Hilfiger, Stone Island, etc)
+- Designer handbags and accessories (Louis Vuitton, Gucci, etc)
+- Trainers/sneakers (Nike, Adidas, Jordan — fakes very common)
+- Electrical items with unfamiliar branding
+- Luxury watches
  
 Pricing guidance:
 - Common books: market £1-3, charity £0.50-1.00
@@ -657,7 +726,7 @@ Pricing guidance:
 - Electronics (working): market varies hugely, check carefully
 - Collectables/vintage: always check carefully, market value can be surprisingly high
  
-If items not clearly visible or image unsuitable, return [].`;
+If no suitable donated items are visible, return [].`;
  
 async function scanItems() {
   if (!currentBase64) return;
@@ -726,6 +795,7 @@ function renderPending() {
           <select onchange="updatePending(${it._id},'condition',this.value)">${conds.map(c=>`<option${c===it.condition?' selected':''}>${c}</option>`).join('')}</select>
         </div>
         ${it.valueNote ? `<div style="font-size:0.82rem;color:var(--muted);margin-top:0.5rem;font-style:italic;">💡 ${esc(it.valueNote)}</div>` : ''}
+        ${it.authenticityWarning ? `<div class="auth-warning">⚠️ ${esc(it.authenticityWarning)}</div>` : ''}
       </div>
       <div class="result-pricing">
         ${hasHighValue ? `
@@ -792,9 +862,11 @@ function addAllToStock() {
 function renderImpact() {
   const d = loadData();
   const stock = d.stock || [];
+  const sold = d.sold || [];
+  const allItems = [...stock, ...sold];
   const el = document.getElementById('impactContent');
  
-  if (!stock.length) {
+  if (!stock.length && !sold.length) {
     el.innerHTML = `
       <div class="no-impact">
         <div class="no-impact-icon">📷</div>
@@ -805,18 +877,18 @@ function renderImpact() {
   }
  
   // Calculate stats
-  const totalItems = stock.length;
-  const totalCharityValue = stock.reduce((s,x) => s + (x.price || 0), 0);
-  const totalMarketValue = stock.reduce((s,x) => s + (x.marketValue || 0), 0);
+  const totalItems = allItems.length;
+  const totalCharityValue = allItems.reduce((s,x) => s + (x.price || 0), 0);
+  const totalMarketValue = allItems.reduce((s,x) => s + (x.marketValue || 0), 0);
   // Baseline: what a volunteer might have guessed without AI (avg £1.50 per item for unknown items)
-  const baselineValue = stock.reduce((s,x) => {
+  const baselineValue = allItems.reduce((s,x) => {
     const baseline = x.marketValue > 5 ? 1.50 : x.price * 0.6;
     return s + baseline;
   }, 0);
   const recovered = Math.max(0, totalCharityValue - baselineValue);
  
   // Top value finds (market value >= £10)
-  const topFinds = [...stock]
+  const topFinds = [...allItems]
     .filter(x => (x.marketValue || 0) >= 10)
     .sort((a,b) => (b.marketValue || 0) - (a.marketValue || 0))
     .slice(0, 5);
@@ -852,6 +924,12 @@ function renderImpact() {
         <div class="impact-card-label">High-value finds</div>
         <div class="impact-card-value">${topFinds.length}</div>
         <div class="impact-card-sub">items worth £10+ on eBay</div>
+      </div>
+      <div class="impact-card">
+        <div class="impact-card-icon">🛍️</div>
+        <div class="impact-card-label">Items sold</div>
+        <div class="impact-card-value">${sold.length}</div>
+        <div class="impact-card-sub">cleared from stock
       </div>
     </div>
  
@@ -934,6 +1012,7 @@ function renderStock() {
         </div>
         <div class="stock-item-price">£${(it.price||0).toFixed(2)}</div>
         <div class="stock-item-date">${it.date||''}</div>
+        <button class="sold-btn" onclick="markSold('${it.id}')">Sold ✓</button>
         <button class="del-btn" onclick="removeStock('${it.id}')" title="Remove">✕</button>
       </div>`).join('') +
   `</div>`;
@@ -960,6 +1039,30 @@ function exportCSV() {
   const shop = (d.setup?.shop || 'stock').replace(/\s+/g,'-').toLowerCase();
   a.download = `${shop}-stock-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
+}
+ 
+function resetScan() {
+  document.getElementById('resultsWrap').classList.remove('show');
+  document.getElementById('previewWrap').style.display = 'none';
+  document.getElementById('fileInput').value = '';
+  document.getElementById('noItemsMsg').classList.remove('show');
+  currentBase64 = null;
+  pendingItems = [];
+  window.scrollTo(0, 0);
+}
+ 
+function markSold(id) {
+  const d = loadData();
+  const item = d.stock.find(x => String(x.id) === String(id));
+  if (!item) return;
+  if (!d.sold) d.sold = [];
+  d.sold.push({ ...item, soldDate: new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) });
+  d.stock = d.stock.filter(x => String(x.id) !== String(id));
+  saveData(d);
+  updateNavCount();
+  renderStock();
+  renderImpact();
+  toast(`"${item.name}" marked as sold ✓`);
 }
  
 function updateNavCount() {
