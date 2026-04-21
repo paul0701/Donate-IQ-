@@ -1,6 +1,3 @@
-Donationiq v2 · HTML
-Copy
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -209,14 +206,66 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
 .scan-btn:hover { background: var(--teal-mid); }
 .scan-btn:disabled { background: #aaa; cursor: not-allowed; }
  
-.scanning { display: none; text-align: center; padding: 2.5rem; background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); margin-top: 1.5rem; }
+.scanning { display: none; margin-top: 1.5rem; border-radius: var(--radius); overflow: hidden; }
 .scanning.show { display: block; }
-.scanning-dots span { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--teal); margin: 0 4px; animation: bounce 1.2s infinite; }
-.scanning-dots span:nth-child(2) { animation-delay: 0.2s; }
-.scanning-dots span:nth-child(3) { animation-delay: 0.4s; }
+ 
+/* ── Teletext Loading Screen ── */
+.teletext {
+  background: #000080;
+  padding: 0;
+  font-family: 'Courier New', monospace;
+  border: 4px solid #ffffff;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.teletext-header {
+  background: #ffffff;
+  color: #000080;
+  padding: 0.4rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
+.teletext-header-right { color: #ff0000; font-size: 0.8rem; }
+.teletext-body { padding: 1.25rem 1rem; }
+.teletext-title {
+  color: #ffff00;
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  margin-bottom: 0.75rem;
+  text-align: center;
+}
+.teletext-divider { color: #00ffff; margin-bottom: 0.75rem; font-size: 0.85rem; letter-spacing: 0.05em; }
+.teletext-status { color: #00ff00; font-size: 0.85rem; margin-bottom: 0.5rem; min-height: 1.2rem; letter-spacing: 0.05em; }
+.teletext-bar-wrap { margin: 0.75rem 0; }
+.teletext-bar-label { color: #ffffff; font-size: 0.75rem; margin-bottom: 0.25rem; letter-spacing: 0.05em; }
+.teletext-bar {
+  background: #000040;
+  border: 1px solid #00ffff;
+  height: 24px;
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+.teletext-bar-fill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    #00ff00 0px, #00ff00 12px,
+    #00cc00 12px, #00cc00 16px
+  );
+  width: 0%;
+  transition: width 0.3s ease;
+}
+.teletext-percent { color: #ffff00; font-size: 0.85rem; margin-top: 0.25rem; text-align: right; letter-spacing: 0.05em; }
+.teletext-footer { color: #00ffff; font-size: 0.75rem; margin-top: 0.75rem; text-align: center; letter-spacing: 0.08em; animation: teleblink 1s infinite; }
+.teletext-page { color: #ff00ff; font-size: 0.75rem; margin-top: 0.4rem; text-align: center; letter-spacing: 0.05em; }
+@keyframes teleblink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
 @keyframes bounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
-.scanning p { color: var(--muted); font-size: 1rem; margin-top: 1rem; }
-.scanning-sub { font-size: 0.85rem !important; color: var(--teal) !important; margin-top: 0.35rem !important; font-weight: 600; }
  
 .results-wrap { display: none; margin-top: 1.5rem; }
 .results-wrap.show { display: block; }
@@ -281,6 +330,23 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
 }
 .add-all-btn:hover { background: var(--teal-mid); }
  
+.demo-banner {
+  background: var(--purple-light); color: var(--purple);
+  border: 2px solid var(--purple); border-radius: var(--radius);
+  padding: 0.75rem 1.25rem; margin-bottom: 1.5rem;
+  font-weight: 700; font-size: 0.9rem; text-align: center;
+  display: none;
+}
+.demo-banner.show { display: block; }
+.demo-toggle {
+  position: fixed; bottom: 1.5rem; left: 1.5rem;
+  background: var(--purple); color: #fff;
+  border: none; border-radius: 10px;
+  padding: 0.5rem 1rem; font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
+  z-index: 999; opacity: 0.85;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+}
 .auth-warning {
   background: var(--amber-light); color: var(--amber);
   border: 1px solid #f0d090; border-radius: 8px;
@@ -444,6 +510,7 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
     <div class="sidebar-brand">
       <div class="brand-name">DonationIQ</div>
       <div class="brand-shop" id="sidebarShop">Your Shop</div>
+      <div id="shopCodeDisplay" style="display:none;font-size:0.7rem;color:var(--teal-mid);margin-top:0.2rem;font-weight:700;"></div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Workflow</div>
@@ -487,6 +554,9 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
       <div class="page-title">Scan a Donation</div>
       <div class="page-sub">Take a photo of donated items — AI will identify them and check market prices so you never undersell.</div>
  
+      <div class="demo-banner" id="demoBanner">
+        🎭 DEMO MODE — Tap "Identify items" to see DonationIQ in action with sample data
+      </div>
       <div class="scan-tips">
         <div class="scan-tips-title">📸 Tips for best results</div>
         <ul>
@@ -509,9 +579,27 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
       </div>
  
       <div class="scanning" id="scanningIndicator">
-        <div class="scanning-dots"><span></span><span></span><span></span></div>
-        <p>Identifying items and checking market prices…</p>
-        <p class="scanning-sub">Checking eBay &amp; Vinted sold listings</p>
+        <div class="teletext">
+          <div class="teletext-header">
+            <span>DONATIONIQ ■ PAGE 101</span>
+            <span class="teletext-header-right" id="teleClock"></span>
+          </div>
+          <div class="teletext-body">
+            <div class="teletext-title">▶ ITEM VALUATION SERVICE ◀</div>
+            <div class="teletext-divider">════════════════════════════</div>
+            <div class="teletext-status" id="teleStatus">INITIALISING...</div>
+            <div class="teletext-bar-wrap">
+              <div class="teletext-bar-label">PROGRESS</div>
+              <div class="teletext-bar">
+                <div class="teletext-bar-fill" id="teleBarFill"></div>
+              </div>
+              <div class="teletext-percent" id="telePercent">0%</div>
+            </div>
+            <div class="teletext-divider">════════════════════════════</div>
+            <div class="teletext-footer">PLEASE WAIT...</div>
+            <div class="teletext-page">POWERED BY AGNOSTIC SOLUTIONS</div>
+          </div>
+        </div>
       </div>
  
       <div class="no-items" id="noItemsMsg">
@@ -557,6 +645,11 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
       <div class="page-title">Settings</div>
       <div class="page-sub">Update your shop details.</div>
       <div class="settings-card">
+        <div id="shopCodeInfo" style="display:none;background:var(--teal-light);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1.25rem;">
+          <div style="font-size:0.8rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:0.05em;">Your Shop Code</div>
+          <div id="shopCodeValue" style="font-size:1.4rem;font-weight:700;color:var(--teal);font-family:'Playfair Display',serif;margin-top:0.2rem;"></div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;">Share this URL with your team:<br><span id="shopCodeUrl" style="color:var(--teal);word-break:break-all;"></span></div>
+        </div>
         <label>Charity name</label>
         <input type="text" id="setCharity">
         <label>Shop name or location</label>
@@ -575,16 +668,85 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
 </div>
  
 <div class="success-toast" id="toast"></div>
+<button class="demo-toggle" onclick="toggleDemo()">🎭 Demo Mode</button>
  
 <script>
-const STORE = 'donationiq_v2';
 let pendingItems = [];
+ 
+// ── Shop code from URL ──
+function getShopCode() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get('shop');
+  return code ? code.toUpperCase().replace(/[^A-Z0-9-]/g,'') : null;
+}
+ 
+const SHOP_CODE = getShopCode();
+const STORE = SHOP_CODE ? 'donationiq_' + SHOP_CODE : 'donationiq_v2';
  
 function loadData() {
   try { return JSON.parse(localStorage.getItem(STORE)) || { setup: null, stock: [] }; }
   catch { return { setup: null, stock: [] }; }
 }
 function saveData(d) { localStorage.setItem(STORE, JSON.stringify(d)); }
+ 
+// ── Teletext Animation ──
+const TELETEXT_MESSAGES = [
+  "SCANNING IMAGE...",
+  "IDENTIFYING ITEMS...",
+  "CHECKING EBAY LISTINGS...",
+  "CHECKING VINTED PRICES...",
+  "ANALYSING MARKET DATA...",
+  "CALCULATING VALUATIONS...",
+  "CHECKING AUTHENTICITY...",
+  "PREPARING RESULTS...",
+  "ALMOST DONE..."
+];
+ 
+let teletextInterval = null;
+let teletextProgress = 0;
+ 
+function startTeletext() {
+  teletextProgress = 0;
+  let msgIndex = 0;
+  const fill = document.getElementById('teleBarFill');
+  const status = document.getElementById('teleStatus');
+  const percent = document.getElementById('telePercent');
+  const clock = document.getElementById('teleClock');
+ 
+  // Clock
+  clock.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+ 
+  // Animate progress
+  teletextInterval = setInterval(() => {
+    // Progress bar — gets to 90% then waits
+    if (teletextProgress < 90) {
+      teletextProgress += Math.random() * 8;
+      if (teletextProgress > 90) teletextProgress = 90;
+    }
+    fill.style.width = teletextProgress + '%';
+    percent.textContent = Math.round(teletextProgress) + '%';
+ 
+    // Cycle messages
+    status.textContent = TELETEXT_MESSAGES[msgIndex % TELETEXT_MESSAGES.length];
+    msgIndex++;
+ 
+    // Update clock
+    clock.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }, 1800);
+}
+ 
+function stopTeletext() {
+  if (teletextInterval) {
+    clearInterval(teletextInterval);
+    teletextInterval = null;
+  }
+  const fill = document.getElementById('teleBarFill');
+  const percent = document.getElementById('telePercent');
+  const status = document.getElementById('teleStatus');
+  fill.style.width = '100%';
+  percent.textContent = '100%';
+  status.textContent = 'COMPLETE ✓';
+}
  
 function toggleSidebar() {
   document.querySelector('.sidebar').classList.toggle('open');
@@ -601,7 +763,7 @@ function saveSetup() {
   const shop = document.getElementById('sShop').value.trim();
   if (!charity) { alert('Please enter your charity name.'); return; }
   const d = loadData();
-  d.setup = { charity, shop };
+  d.setup = { charity, shop, shopCode: SHOP_CODE };
   saveData(d);
   launchApp();
 }
@@ -613,7 +775,12 @@ function launchApp() {
   document.getElementById('appRoot').style.display = 'flex';
   document.getElementById('sidebarShop').textContent = d.setup.shop || d.setup.charity;
   document.getElementById('setCharity').value = d.setup.charity;
-  document.getElementById('setShop').value = d.setup.shop;
+  document.getElementById('setShop').value = d.setup.shop || '';
+  // Show shop code in sidebar if present
+  if (SHOP_CODE) {
+    const codeEl = document.getElementById('shopCodeDisplay');
+    if (codeEl) { codeEl.textContent = 'Code: ' + SHOP_CODE; codeEl.style.display = 'block'; }
+  }
   updateNavCount();
   renderImpact();
 }
@@ -629,6 +796,11 @@ function showPage(name, el) {
     const d = loadData();
     document.getElementById('setCharity').value = d.setup?.charity || '';
     document.getElementById('setShop').value = d.setup?.shop || '';
+    if (SHOP_CODE) {
+      document.getElementById('shopCodeInfo').style.display = 'block';
+      document.getElementById('shopCodeValue').textContent = SHOP_CODE;
+      document.getElementById('shopCodeUrl').textContent = window.location.origin + window.location.pathname + '?shop=' + SHOP_CODE;
+    }
   }
 }
  
@@ -688,6 +860,105 @@ zone.addEventListener('drop', e => {
 });
  
 // ── AI Scanning ──
+// ── Demo Mode ──
+let DEMO_MODE = false;
+ 
+const DEMO_ITEMS = [
+  {
+    name: "Prada Milano Amber Pour Homme Cologne",
+    category: "Accessories",
+    condition: "Good",
+    marketValue: 45,
+    price: 12,
+    valueNote: "Prada fragrances sell for £30-60 on eBay depending on volume remaining",
+    authenticityWarning: "Verify authenticity — counterfeit versions of this fragrance are widespread. Check batch code on base of bottle."
+  },
+  {
+    name: "Microsoft Xbox Series X Controller",
+    category: "Electronics",
+    condition: "Good",
+    marketValue: 35,
+    price: 10,
+    valueNote: "Xbox Series X controllers sell for £25-45 on eBay depending on condition and colour",
+    authenticityWarning: null
+  },
+  {
+    name: "Nintendo Switch Console",
+    category: "Electronics",
+    condition: "Good",
+    marketValue: 150,
+    price: 40,
+    valueNote: "Nintendo Switch consoles sell for £120-180 on eBay — always test powers on before pricing",
+    authenticityWarning: "Test device powers on and check for Nintendo account locks before pricing. Verify IMEI not blacklisted."
+  },
+  {
+    name: "LEGO Marvel Spider-Man Oscorp Tower Set",
+    category: "Toys",
+    condition: "Good",
+    marketValue: 45,
+    price: 12,
+    valueNote: "LEGO Marvel sets sell for £35-55 complete on eBay — check all minifigures present",
+    authenticityWarning: "Check LEGO stud markings — knock-off versions are very common and worth much less. Genuine LEGO has 'LEGO' printed on every stud."
+  },
+  {
+    name: "Apple iPhone (model unclear)",
+    category: "Electronics",
+    condition: "Fair",
+    marketValue: 120,
+    price: 30,
+    valueNote: "iPhones sell for £80-200+ on eBay depending on model and storage — identify exact model before pricing",
+    authenticityWarning: "Test phone powers on. Check for iCloud activation lock — a locked iPhone is worth almost nothing. Verify IMEI not blacklisted."
+  },
+  {
+    name: "White Casio Calculator",
+    category: "Electronics",
+    condition: "Good",
+    marketValue: 4,
+    price: 1,
+    valueNote: "Basic calculators sell for £2-6 on eBay — common item with low resale value",
+    authenticityWarning: null
+  },
+  {
+    name: "USB Hub / Multi-Port Adapter",
+    category: "Electronics",
+    condition: "Good",
+    marketValue: 8,
+    price: 2.50,
+    valueNote: "USB hubs sell for £5-15 on eBay depending on ports and brand",
+    authenticityWarning: null
+  },
+  {
+    name: "Purple Party Hat / Decoration",
+    category: "Other",
+    condition: "Good",
+    marketValue: 1,
+    price: 0.50,
+    valueNote: "Party decorations have low resale value but sell quickly at low prices",
+    authenticityWarning: null
+  }
+];
+ 
+function toggleDemo() {
+  DEMO_MODE = !DEMO_MODE;
+  const banner = document.getElementById('demoBanner');
+  const btn = document.querySelector('.demo-toggle');
+  if (DEMO_MODE) {
+    banner.classList.add('show');
+    btn.textContent = '✕ Exit Demo';
+    btn.style.background = 'var(--red)';
+    showPage('scan', document.querySelector('.nav-item'));
+    toast('Demo mode on — tap Identify items to see sample results');
+  } else {
+    banner.classList.remove('show');
+    btn.textContent = '🎭 Demo Mode';
+    btn.style.background = 'var(--purple)';
+    document.getElementById('resultsWrap').classList.remove('show');
+    document.getElementById('previewWrap').style.display = 'none';
+    document.getElementById('noItemsMsg').classList.remove('show');
+    toast('Demo mode off');
+  }
+}
+ 
 const WORKER_URL = 'https://donateiq.paul07011985.workers.dev';
  
 const SCAN_PROMPT = `You are helping a UK charity shop log and price donated items. You have expert knowledge of UK resale markets including eBay and Vinted sold listings.
@@ -729,12 +1000,30 @@ Pricing guidance:
 If no suitable donated items are visible, return [].`;
  
 async function scanItems() {
+  // Demo mode — return pre-loaded results instantly
+  if (DEMO_MODE) {
+    document.getElementById('resultsWrap').classList.remove('show');
+    document.getElementById('noItemsMsg').classList.remove('show');
+    document.getElementById('scanningIndicator').classList.add('show');
+    startTeletext();
+    await new Promise(r => setTimeout(r, 3500));
+    stopTeletext();
+    await new Promise(r => setTimeout(r, 400));
+    document.getElementById('scanningIndicator').classList.remove('show');
+    pendingItems = DEMO_ITEMS.map((it, i) => ({ ...it, _id: Date.now() + i }));
+    renderPending();
+    document.getElementById('resultsWrap').classList.add('show');
+    document.getElementById('resultCount').textContent = `${pendingItems.length} items found`;
+    return;
+  }
+ 
   if (!currentBase64) return;
   const btn = document.getElementById('scanBtn');
   btn.disabled = true;
   document.getElementById('scanningIndicator').classList.add('show');
   document.getElementById('resultsWrap').classList.remove('show');
   document.getElementById('noItemsMsg').classList.remove('show');
+  startTeletext();
  
   try {
     const response = await fetch(WORKER_URL, {
@@ -757,6 +1046,7 @@ async function scanItems() {
       items = JSON.parse(raw);
     } catch(e) { items = []; }
  
+    stopTeletext();
     document.getElementById('scanningIndicator').classList.remove('show');
     btn.disabled = false;
  
@@ -771,9 +1061,16 @@ async function scanItems() {
     document.getElementById('resultCount').textContent = `${pendingItems.length} item${pendingItems.length !== 1 ? 's' : ''} found`;
  
   } catch (err) {
+    stopTeletext();
     document.getElementById('scanningIndicator').classList.remove('show');
     btn.disabled = false;
-    alert('Something went wrong scanning the image. Please try again.');
+    document.getElementById('noItemsMsg').innerHTML = `
+      <div class="no-items-icon">⚠️</div>
+      <strong>Something went wrong</strong>
+      <p style="margin-top:0.5rem;margin-bottom:1rem;">Couldn't connect to the valuation service. Please check your connection and try again.</p>
+      <button onclick="resetScan()" style="padding:0.75rem 1.5rem;background:var(--teal);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">↩ Try again</button>
+    `;
+    document.getElementById('noItemsMsg').classList.add('show');
   }
 }
  
