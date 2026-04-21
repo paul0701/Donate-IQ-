@@ -347,6 +347,12 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
   z-index: 999; opacity: 0.85;
   box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
+.recent-sale {
+  background: var(--green-light); color: var(--green);
+  border: 1px solid #b8dfa0; border-radius: 8px;
+  padding: 0.5rem 0.75rem; font-size: 0.82rem; font-weight: 600;
+  margin-top: 0.5rem; display: flex; align-items: center; gap: 0.4rem;
+}
 .auth-warning {
   background: var(--amber-light); color: var(--amber);
   border: 1px solid #f0d090; border-radius: 8px;
@@ -832,15 +838,28 @@ let currentType = 'image/jpeg';
 function handleFile(e) {
   const file = e.target.files[0];
   if (!file) return;
-  currentType = file.type || 'image/jpeg';
+  currentType = 'image/jpeg';
   const reader = new FileReader();
   reader.onload = ev => {
-    const result = ev.target.result;
-    currentBase64 = result.split(',')[1];
-    document.getElementById('previewImg').src = result;
-    document.getElementById('previewWrap').style.display = 'block';
-    document.getElementById('resultsWrap').classList.remove('show');
-    document.getElementById('noItemsMsg').classList.remove('show');
+    const img = new Image();
+    img.onload = () => {
+      // Compress to max 1200px wide
+      const MAX = 1200;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      else if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.82);
+      currentBase64 = compressed.split(',')[1];
+      document.getElementById('previewImg').src = compressed;
+      document.getElementById('previewWrap').style.display = 'block';
+      document.getElementById('resultsWrap').classList.remove('show');
+      document.getElementById('noItemsMsg').classList.remove('show');
+    };
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -871,6 +890,7 @@ const DEMO_ITEMS = [
     marketValue: 45,
     price: 12,
     valueNote: "Prada fragrances sell for £30-60 on eBay depending on volume remaining",
+    recentSale: "Similar sold 3 days ago — £43.00",
     authenticityWarning: "Verify authenticity — counterfeit versions of this fragrance are widespread. Check batch code on base of bottle."
   },
   {
@@ -889,6 +909,7 @@ const DEMO_ITEMS = [
     marketValue: 150,
     price: 40,
     valueNote: "Nintendo Switch consoles sell for £120-180 on eBay — always test powers on before pricing",
+    recentSale: "Nintendo Switch V2 sold yesterday — £138.00",
     authenticityWarning: "Test device powers on and check for Nintendo account locks before pricing. Verify IMEI not blacklisted."
   },
   {
@@ -979,6 +1000,7 @@ Each object must have:
 - "price": recommended charity shop price in GBP (number). Should be roughly 20-30% of market value, minimum 50p. Never undersell valuable items.
 - "valueNote": one sentence explaining the market value (e.g. "Sells for £80-120 on eBay due to film photography revival")
 - "authenticityWarning": null if no concern, or a short warning string if counterfeits are common for this item type (e.g. "Check LEGO stud markings — knock-off versions are very common and worth much less", "Verify authenticity — counterfeit versions of this perfume are widespread", "Check labels carefully — fake designer items are frequently donated")
+- "recentSale": use your web search to find the most recent comparable completed/sold eBay UK listing for this item. Return a string like "Similar item sold 2 days ago — £42.00" or "Sold last week — £138.00". If you cannot find a recent sale, return null.
  
 Items that ALWAYS need an authenticityWarning:
 - LEGO (knock-offs like Lepin are extremely common)
@@ -1092,6 +1114,7 @@ function renderPending() {
           <select onchange="updatePending(${it._id},'condition',this.value)">${conds.map(c=>`<option${c===it.condition?' selected':''}>${c}</option>`).join('')}</select>
         </div>
         ${it.valueNote ? `<div style="font-size:0.82rem;color:var(--muted);margin-top:0.5rem;font-style:italic;">💡 ${esc(it.valueNote)}</div>` : ''}
+        ${it.recentSale ? `<div class="recent-sale">🔨 eBay: ${esc(it.recentSale)}</div>` : ''}
         ${it.authenticityWarning ? `<div class="auth-warning">⚠️ ${esc(it.authenticityWarning)}</div>` : ''}
       </div>
       <div class="result-pricing">
@@ -1141,6 +1164,7 @@ function addAllToStock() {
       price: it.price,
       marketValue: it.marketValue || 0,
       valueNote: it.valueNote || '',
+      recentSale: it.recentSale || null,
       date: today
     });
   });
@@ -1301,7 +1325,7 @@ function renderStock() {
       <div class="stock-item">
         <div class="stock-item-name">
           <strong>${esc(it.name)}</strong>
-          <span>${esc(it.category)}</span>
+          <span>${esc(it.category)}${it.recentSale ? ' · 🔨 ' + esc(it.recentSale) : ''}</span>
         </div>
         <div class="stock-item-badges">
           ${condBadge(it.condition)}
