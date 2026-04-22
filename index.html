@@ -355,6 +355,24 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
   z-index: 999; opacity: 0.85;
   box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
+.brand-hint {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.brand-hint-input {
+  flex: 1; padding: 0.65rem 1rem;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: 'Nunito', sans-serif; font-size: 0.95rem;
+  background: var(--bg); color: var(--text); outline: none;
+  min-height: 44px;
+}
+.brand-hint-input:focus { border-color: var(--teal-mid); }
+.brand-hint-label {
+  font-size: 0.82rem; color: var(--muted);
+  margin-bottom: 0.3rem; font-weight: 600;
+}
 .manual-entry {
   margin-top: 1.25rem;
   background: var(--surface);
@@ -626,6 +644,12 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
  
       <div class="preview-wrap" id="previewWrap">
         <img id="previewImg" src="" alt="Preview">
+        <div style="margin-top:0.75rem;">
+          <div class="brand-hint-label">💡 Spot a brand name in the photo? Type it here for better accuracy (optional)</div>
+          <div class="brand-hint">
+            <input type="text" class="brand-hint-input" id="brandHint" placeholder="e.g. Scriveiner, Nike, Lego Arkham Asylum...">
+          </div>
+        </div>
         <button class="scan-btn" id="scanBtn" onclick="scanItems()">🔍 Identify items &amp; check prices</button>
       </div>
  
@@ -1047,7 +1071,7 @@ function toggleDemo() {
  
 const WORKER_URL = 'https://donateiq.paul07011985.workers.dev';
  
-const SCAN_PROMPT = `You are helping a UK charity shop log and price donated items. You have expert knowledge of UK resale markets including eBay and Vinted sold listings.
+const SCAN_PROMPT_BASE = `You are helping a UK charity shop log and price donated items. You have expert knowledge of UK resale markets including eBay and Vinted sold listings.
  
 Examine this image and list ONLY loose, portable donated items that could be sold in a charity shop.
  
@@ -1086,6 +1110,14 @@ Pricing guidance:
  
 If no suitable donated items are visible, return [].`;
  
+function buildScanPrompt(brandHint) {
+  if (!brandHint || !brandHint.trim()) return SCAN_PROMPT_BASE;
+  return SCAN_PROMPT_BASE + `
+ 
+IMPORTANT: The volunteer has spotted this brand/text in the photo: "${brandHint.trim()}"
+Use BOTH the image AND this brand hint together to identify items as accurately as possible. This hint should significantly improve your identification accuracy.`;
+}
+ 
 async function scanItems() {
   // Demo mode — return pre-loaded results instantly
   if (DEMO_MODE) {
@@ -1119,7 +1151,7 @@ async function scanItems() {
       body: JSON.stringify({
         imageData: currentBase64,
         mimeType: currentType,
-        prompt: SCAN_PROMPT
+        prompt: buildScanPrompt(document.getElementById('brandHint').value)
       })
     });
  
@@ -1505,6 +1537,7 @@ function resetScan() {
   document.getElementById('noItemsMsg').classList.remove('show');
   document.getElementById('fallbackBanner').classList.remove('show');
   document.getElementById('manualInput').value = '';
+  document.getElementById('brandHint').value = '';
   currentBase64 = null;
   pendingItems = [];
   window.scrollTo(0, 0);
