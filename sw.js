@@ -1,4 +1,4 @@
-const CACHE_NAME = 'donationiq-v1';
+const CACHE_NAME = 'donationiq-v2';
 const ASSETS = [
   '/Donate-IQ-/',
   '/Donate-IQ-/index.html'
