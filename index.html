@@ -355,6 +355,42 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
   z-index: 999; opacity: 0.85;
   box-shadow: 0 2px 12px rgba(0,0,0,0.2);
 }
+.item-count-wrap {
+  margin-top: 0.75rem;
+}
+.item-count-label {
+  font-size: 0.82rem; font-weight: 600; color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.item-count-row {
+  display: flex; gap: 0.75rem; align-items: center;
+}
+.item-count-input {
+  width: 80px; padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-family: 'Nunito', sans-serif; font-size: 1rem;
+  font-weight: 700; text-align: center;
+  background: var(--bg); color: var(--text); outline: none;
+  min-height: 44px;
+}
+.item-count-input:focus { border-color: var(--teal-mid); }
+.item-count-hint {
+  font-size: 0.8rem; color: var(--muted);
+}
+.count-warning {
+  background: var(--amber-light); color: var(--amber);
+  border: 1px solid #f0d090; border-radius: var(--radius);
+  padding: 0.75rem 1rem; margin-top: 1rem;
+  font-size: 0.9rem; font-weight: 600; display: none;
+}
+.count-warning.show { display: block; }
+.count-success {
+  background: var(--green-light); color: var(--green);
+  border: 1px solid #b8dfa0; border-radius: var(--radius);
+  padding: 0.75rem 1rem; margin-top: 1rem;
+  font-size: 0.9rem; font-weight: 600; display: none;
+}
+.count-success.show { display: block; }
 .brand-hint {
   margin-top: 0.75rem;
   display: flex;
@@ -644,14 +680,23 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
  
       <div class="preview-wrap" id="previewWrap">
         <img id="previewImg" src="" alt="Preview">
+        <div class="item-count-wrap">
+          <div class="item-count-label">📦 How many items are in your photo? (optional)</div>
+          <div class="item-count-row">
+            <input type="number" class="item-count-input" id="itemCount" min="1" max="50" placeholder="0">
+            <span class="item-count-hint">If we miss any, we'll let you know</span>
+          </div>
+        </div>
         <div style="margin-top:0.75rem;">
-          <div class="brand-hint-label">💡 Spot a brand name in the photo? Type it here for better accuracy (optional)</div>
+          <div class="brand-hint-label">💡 Spot a brand name? Type it here for better accuracy (optional)</div>
           <div class="brand-hint">
             <input type="text" class="brand-hint-input" id="brandHint" placeholder="e.g. Scriveiner, Nike, Lego Arkham Asylum...">
           </div>
         </div>
         <button class="scan-btn" id="scanBtn" onclick="scanItems()">🔍 Identify items &amp; check prices</button>
       </div>
+      <div class="count-warning" id="countWarning"></div>
+      <div class="count-success" id="countSuccess"></div>
  
       <div class="scanning" id="scanningIndicator">
         <div class="teletext">
@@ -1182,6 +1227,24 @@ async function scanItems() {
     document.getElementById('resultsWrap').classList.add('show');
     document.getElementById('resultCount').textContent = `${pendingItems.length} item${pendingItems.length !== 1 ? 's' : ''} found`;
  
+    // Item count check
+    const expectedCount = parseInt(document.getElementById('itemCount').value);
+    const foundCount = pendingItems.length;
+    const warning = document.getElementById('countWarning');
+    const success = document.getElementById('countSuccess');
+    warning.classList.remove('show');
+    success.classList.remove('show');
+    if (expectedCount && !isNaN(expectedCount)) {
+      if (foundCount < expectedCount) {
+        const missing = expectedCount - foundCount;
+        warning.textContent = `⚠️ You counted ${expectedCount} items but we only found ${foundCount}. ${missing} item${missing !== 1 ? 's' : ''} may have been missed — check the results and use manual lookup for anything missing.`;
+        warning.classList.add('show');
+      } else if (foundCount >= expectedCount) {
+        success.textContent = `✓ All ${expectedCount} items identified!`;
+        success.classList.add('show');
+      }
+    }
+ 
   } catch (err) {
     stopTeletext();
     document.getElementById('scanningIndicator').classList.remove('show');
@@ -1538,6 +1601,9 @@ function resetScan() {
   document.getElementById('fallbackBanner').classList.remove('show');
   document.getElementById('manualInput').value = '';
   document.getElementById('brandHint').value = '';
+  document.getElementById('itemCount').value = '';
+  document.getElementById('countWarning').classList.remove('show');
+  document.getElementById('countSuccess').classList.remove('show');
   currentBase64 = null;
   pendingItems = [];
   window.scrollTo(0, 0);
