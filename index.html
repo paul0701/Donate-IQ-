@@ -330,6 +330,14 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
 }
 .add-all-btn:hover { background: var(--teal-mid); }
  
+.fallback-banner {
+  background: var(--amber-light); color: var(--amber);
+  border: 2px solid #f0d090; border-radius: var(--radius);
+  padding: 0.75rem 1.25rem; margin-bottom: 1.5rem;
+  font-weight: 700; font-size: 0.9rem; text-align: center;
+  display: none;
+}
+.fallback-banner.show { display: block; }
 .demo-banner {
   background: var(--purple-light); color: var(--purple);
   border: 2px solid var(--purple); border-radius: var(--radius);
@@ -594,6 +602,9 @@ h1, h2, h3, .brand-name, .page-title { font-family: 'Playfair Display', serif; }
       <div class="page-title">Scan a Donation</div>
       <div class="page-sub">Take a photo of donated items — AI will identify them and check market prices so you never undersell.</div>
  
+      <div class="fallback-banner" id="fallbackBanner">
+        ⚠️ Live pricing temporarily unavailable — showing example results. Your next scan will try again automatically.
+      </div>
       <div class="demo-banner" id="demoBanner">
         🎭 DEMO MODE — Tap "Identify items" to see DonationIQ in action with sample data
       </div>
@@ -1004,6 +1015,15 @@ const DEMO_ITEMS = [
   }
 ];
  
+function activateFallback() {
+  // API failed — show demo results with warning banner
+  document.getElementById('fallbackBanner').classList.add('show');
+  pendingItems = DEMO_ITEMS.map((it, i) => ({ ...it, _id: Date.now() + i }));
+  renderPending();
+  document.getElementById('resultsWrap').classList.add('show');
+  document.getElementById('resultCount').textContent = `${pendingItems.length} example items`;
+}
+ 
 function toggleDemo() {
   DEMO_MODE = !DEMO_MODE;
   const banner = document.getElementById('demoBanner');
@@ -1118,10 +1138,13 @@ async function scanItems() {
     btn.disabled = false;
  
     if (!items.length) {
-      document.getElementById('noItemsMsg').classList.add('show');
+      // API returned nothing — activate fallback
+      activateFallback();
       return;
     }
  
+    // Hide fallback banner if showing from previous scan
+    document.getElementById('fallbackBanner').classList.remove('show');
     pendingItems = items.map((it, i) => ({ ...it, _id: Date.now() + i }));
     renderPending();
     document.getElementById('resultsWrap').classList.add('show');
@@ -1131,13 +1154,8 @@ async function scanItems() {
     stopTeletext();
     document.getElementById('scanningIndicator').classList.remove('show');
     btn.disabled = false;
-    document.getElementById('noItemsMsg').innerHTML = `
-      <div class="no-items-icon">⚠️</div>
-      <strong>Something went wrong</strong>
-      <p style="margin-top:0.5rem;margin-bottom:1rem;">Couldn't connect to the valuation service. Please check your connection and try again.</p>
-      <button onclick="resetScan()" style="padding:0.75rem 1.5rem;background:var(--teal);color:#fff;border:none;border-radius:10px;font-family:'Nunito',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;">↩ Try again</button>
-    `;
-    document.getElementById('noItemsMsg').classList.add('show');
+    // Network error — activate fallback
+    activateFallback();
   }
 }
  
@@ -1485,6 +1503,7 @@ function resetScan() {
   document.getElementById('previewWrap').style.display = 'none';
   document.getElementById('fileInput').value = '';
   document.getElementById('noItemsMsg').classList.remove('show');
+  document.getElementById('fallbackBanner').classList.remove('show');
   document.getElementById('manualInput').value = '';
   currentBase64 = null;
   pendingItems = [];
